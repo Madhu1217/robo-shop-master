@@ -1,0 +1,75 @@
+pipeline {
+  agent any
+ 
+  environment {
+    AWS_REGION      = 'us-east-1'
+    AWS_ACCOUNT_ID  = '<YOUR_AWS_ACCOUNT_ID>'
+    ECR_REGISTRY    = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+    IMAGE_TAG       = "${BUILD_NUMBER}"
+    GITHUB_REPO    = credentials('github-repo-url')
+    SONARQUBE_URL  = credentials('SONARQUBE_URL')
+      }
+ 
+  stages {
+ 
+    stage('Checkout') {
+      steps { git branch: 'main', url: GITHUB_REPO }
+    }
+ 
+    stage('SonarQube Analysis') {
+      steps {
+        withSonarQubeEnv('sonarqube') {
+          sh '''
+            sonar-scanner \
+              -Dsonar.projectKey=robot-shop \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=SONARQUBE_URL
+          '''
+        }
+      }
+    }
+ 
+    stage('Quality Gate') {
+      steps {
+        timeout(time: 5, unit: 'MINUTES') {
+          waitForQualityGate abortPipeline: true
+        }
+      }
+    }
+ 
+    stage('Docker Build & Push to ECR') {
+      steps {
+        withAWS(credentials: 'aws-ecr-creds', region: env.AWS_REGION) {
+          sh '''
+            aws ecr get-login-password --region $AWS_REGION | \
+              docker login --username AWS --password-stdin $ECR_REGISTRY
+ 
+            for SERVICE in web cart catalogue user payment shipping ratings dispatch; do
+              docker build -t $ECR_REGISTRY/robot-shop/$SERVICE:$IMAGE_TAG ./$SERVICE
+              docker push  $ECR_REGISTRY/robot-shop/$SERVICE:$IMAGE_TAG
+            done
+          '''
+        }
+      }
+    }
+ 
+    stage('Update Helm values & push') {
+      steps {
+        sh '''
+          sed -i "s|version: .*|version: $IMAGE_TAG|" K8s/helm/values.yaml
+          sed -i "s|repo: .*|repo: $ECR_REGISTRY/robot-shop|" K8s/helm/values.yaml
+          git config user.email 'jenkins@ci'
+          git config user.name  'Jenkins'
+          git add K8s/helm/values.yaml
+          git commit -m "ci: update image tag to $IMAGE_TAG"
+          git push
+        '''
+      }
+    }
+  }
+ 
+  post {
+    failure { echo 'Pipeline failed — check logs above' }
+    success { echo 'Build complete — ArgoCD will sync automatically' }
+  }
+}
