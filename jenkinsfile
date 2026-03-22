@@ -43,22 +43,34 @@ pipeline {
       }
     }
  
+    // stage('Docker Build & Push to ECR') {
+    //   steps {
+    //     withAWS(credentials: 'aws-ecr-creds', region: env.AWS_REGION) {
+    //       sh '''
+    //         aws ecr get-login-password --region $AWS_REGION | \
+    //           docker login --username AWS --password-stdin $ECR_REGISTRY
+ 
+    //         for SERVICE in web cart catalogue user payment shipping ratings dispatch; do
+    //           docker build -t $ECR_REGISTRY/robot-shop/$SERVICE:$IMAGE_TAG ./$SERVICE
+    //           docker push  $ECR_REGISTRY/robot-shop/$SERVICE:$IMAGE_TAG
+    //         done
+    //       '''
+    //     }
+    //   }
+    // }
     stage('Docker Build & Push to ECR') {
-      steps {
-        withAWS(credentials: 'aws-ecr-creds', region: env.AWS_REGION) {
-          sh '''
+        steps {
+            sh '''
             aws ecr get-login-password --region $AWS_REGION | \
-              docker login --username AWS --password-stdin $ECR_REGISTRY
- 
+                docker login --username AWS --password-stdin $ECR_REGISTRY
+
             for SERVICE in web cart catalogue user payment shipping ratings dispatch; do
-              docker build -t $ECR_REGISTRY/robot-shop/$SERVICE:$IMAGE_TAG ./$SERVICE
-              docker push  $ECR_REGISTRY/robot-shop/$SERVICE:$IMAGE_TAG
+                docker build -t $ECR_REGISTRY/robot-shop/$SERVICE:$IMAGE_TAG ./$SERVICE
+                docker push  $ECR_REGISTRY/robot-shop/$SERVICE:$IMAGE_TAG
             done
-          '''
+            '''
         }
-      }
     }
- 
     stage('Update Helm values & push') {
       steps {
         sh '''
