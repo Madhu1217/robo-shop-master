@@ -99,19 +99,30 @@ pipeline {
     // }
     stage('Update Helm values & push') {
         steps {
-            withCredentials([string(credentialsId: 'github-repo-url', variable: 'GIT_REPO')]) {
+            withCredentials([
+            usernamePassword(
+                credentialsId: 'github-creds',
+                usernameVariable: 'GIT_USER',
+                passwordVariable: 'GIT_TOKEN'
+            )
+            ]) {
             sh '''
+                AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+                ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
                 sed -i "s|version: .*|version: $IMAGE_TAG|" K8s/helm/values.yaml
                 sed -i "s|repo: .*|repo: $ECR_REGISTRY/robot-shop|" K8s/helm/values.yaml
+
                 git config user.email 'jenkins@ci'
                 git config user.name  'Jenkins'
                 git add K8s/helm/values.yaml
                 git commit -m "ci: update image tag to $IMAGE_TAG" || echo "Nothing to commit"
-                git push $GIT_REPO HEAD:main
+
+                git push https://${GIT_USER}:${GIT_TOKEN}@github.com/Madhu1217/robo-shop-master.git HEAD:main
             '''
             }
         }
-    }
+    }   
   }
  
   post {
