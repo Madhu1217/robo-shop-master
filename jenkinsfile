@@ -84,18 +84,33 @@ pipeline {
             }
         }
         }
+    // stage('Update Helm values & push') {
+    //   steps {
+    //     sh '''
+    //       sed -i "s|version: .*|version: $IMAGE_TAG|" K8s/helm/values.yaml
+    //       sed -i "s|repo: .*|repo: $ECR_REGISTRY/robot-shop|" K8s/helm/values.yaml
+    //       git config user.email 'jenkins@ci'
+    //       git config user.name  'Jenkins'
+    //       git add K8s/helm/values.yaml
+    //       git commit -m "ci: update image tag to $IMAGE_TAG"
+    //       git push
+    //     '''
+    //   }
+    // }
     stage('Update Helm values & push') {
-      steps {
-        sh '''
-          sed -i "s|version: .*|version: $IMAGE_TAG|" K8s/helm/values.yaml
-          sed -i "s|repo: .*|repo: $ECR_REGISTRY/robot-shop|" K8s/helm/values.yaml
-          git config user.email 'jenkins@ci'
-          git config user.name  'Jenkins'
-          git add K8s/helm/values.yaml
-          git commit -m "ci: update image tag to $IMAGE_TAG"
-          git push
-        '''
-      }
+        steps {
+            withCredentials([string(credentialsId: 'github-repo-url', variable: 'GIT_REPO')]) {
+            sh '''
+                sed -i "s|version: .*|version: $IMAGE_TAG|" K8s/helm/values.yaml
+                sed -i "s|repo: .*|repo: $ECR_REGISTRY/robot-shop|" K8s/helm/values.yaml
+                git config user.email 'jenkins@ci'
+                git config user.name  'Jenkins'
+                git add K8s/helm/values.yaml
+                git commit -m "ci: update image tag to $IMAGE_TAG" || echo "Nothing to commit"
+                git push $GIT_REPO HEAD:main
+            '''
+            }
+        }
     }
   }
  
