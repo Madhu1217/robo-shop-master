@@ -1,6 +1,8 @@
 pipeline {
   agent any
- 
+    options {
+            skipDefaultCheckout true   // ✅ correct location
+        }
   environment {
     AWS_REGION      = 'us-east-1'
     AWS_ACCOUNT_ID  = '<YOUR_AWS_ACCOUNT_ID>'
@@ -14,7 +16,7 @@ pipeline {
  
     stage('Checkout') {
       steps { git branch: 'main', url: GITHUB_REPO }
-      skipDefaultCheckout: true
+      
     }
  
     stage('SonarQube Analysis') {
