@@ -1,7 +1,7 @@
 pipeline {
   agent any
     options {
-            skipDefaultCheckout(true)   // ✅ correct location
+            skipDefaultCheckout()   // ✅ correct location
         }
   environment {
     AWS_REGION      = 'us-east-1'
@@ -22,14 +22,13 @@ pipeline {
     stage('SonarQube Analysis') {
       steps {
         withSonarQubeEnv('sonarqube') {
-            withEnv(["PATH+SONAR=${tool 'sonar-scanner'}/bin"]) {
+            // withEnv(["PATH+SONAR=${tool 'sonar-scanner'}/bin"]) {
                 sh '''
-                sonar-scanner \
+                /opt/sonar-scanner/bin/sonar-scanner \
                 -Dsonar.projectKey=robot-shop \
-                -Dsonar.sources=. \
-                -Dsonar.host.url=${SONARQUBE_URL}
+                -Dsonar.sources=.
             '''
-            }
+            
             
             }
       }
