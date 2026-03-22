@@ -1,7 +1,7 @@
 pipeline {
   agent any
     options {
-            skipDefaultCheckout true   // ✅ correct location
+            skipDefaultCheckout : true   // ✅ correct location
         }
   environment {
     AWS_REGION      = 'us-east-1'
