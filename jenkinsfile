@@ -100,6 +100,12 @@ pipeline {
     stage('Update Helm values & push') {
         steps {
             withCredentials([
+            [
+                $class: 'AmazonWebServicesCredentialsBinding',
+                credentialsId: 'aws-ecr-creds',
+                accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+            ],
             usernamePassword(
                 credentialsId: 'github-creds',
                 usernameVariable: 'GIT_USER',
@@ -122,7 +128,7 @@ pipeline {
             '''
             }
         }
-    }   
+    }  
   }
  
   post {
