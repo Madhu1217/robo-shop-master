@@ -4,6 +4,7 @@ image:
   repo: 493644444921.dkr.ecr.us-east-1.amazonaws.com/robot-shop
   version: 30
   pullPolicy: IfNotPresent
+  pullSecret: ecr-secret
 
 # EUM configuration
 # Provide your key and set the endpoint

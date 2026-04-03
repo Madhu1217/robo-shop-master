@@ -6,11 +6,11 @@ eval $(egrep '[A-Z]+=' ../.env)
 echo "Repo $REPO"
 echo "Tag $TAG"
 
-docker build -t ${REPO}/rs-load:${TAG} . && docker tag ${REPO}/rs-load:${TAG} ${REPO}/rs-load
+docker build -t ${REPO}/load:${TAG} . && docker tag ${REPO}/load:${TAG} ${REPO}/load
 
 if [ "$1" = "push" ]
 then
     echo "pushing..."
-    docker push ${REPO}/rs-load:${TAG}
-    docker push ${REPO}/rs-load
+    docker push ${REPO}/load:${TAG}
+    docker push ${REPO}/load
 fi
