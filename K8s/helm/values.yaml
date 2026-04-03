@@ -2,7 +2,7 @@
 # Default is docker/robotshop/image:latest
 image:
   repo: 493644444921.dkr.ecr.us-east-1.amazonaws.com/robot-shop
-  version: 34
+  version: 36
   pullPolicy: IfNotPresent
   pullSecret: ecr-secret
 
